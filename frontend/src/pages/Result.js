@@ -1,8 +1,8 @@
 import React from "react";
 import Sidebar from "../components/Sidebar";
-import "../styles/global.css";
+import "../styles/dashboard.css";
 
-function Reports(){
+function Results(){
 
 return(
 
@@ -12,9 +12,9 @@ return(
 
 <div className="main">
 
-<h1>Interview Reports</h1>
+<h1>Results</h1>
 
-<p>All interview feedback will appear here.</p>
+<p>Your interview scores and analytics.</p>
 
 </div>
 
@@ -24,4 +24,4 @@ return(
 
 }
 
-export default Reports
+export default Results

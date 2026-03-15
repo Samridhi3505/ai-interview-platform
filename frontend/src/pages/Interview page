@@ -1,0 +1,79 @@
+import React from "react";
+import Sidebar from "../components/Sidebar";
+import { useNavigate } from "react-router-dom";
+import "../styles/global.css";   // changed from dashboard.css
+
+function Interviews() {
+
+const navigate = useNavigate();
+
+const interviews = [
+
+{
+title: "DSA Interview",
+description: "Solve data structures and algorithms problems",
+type: "dsa"
+},
+
+{
+title: "System Design",
+description: "Design scalable systems",
+type: "system-design"
+},
+
+{
+title: "Technical Interview",
+description: "Mixed coding and theory questions",
+type: "technical"
+},
+
+{
+title: "HR Interview",
+description: "Behavioral and HR questions",
+type: "hr"
+}
+
+];
+
+return (
+
+<div className="layout">
+
+<Sidebar />
+
+<div className="main">
+
+<h1>Choose Interview Type</h1>
+
+<div className="interview-grid">
+
+{interviews.map((interview, index) => (
+
+<div key={index} className="interview-card">
+
+<h3>{interview.title}</h3>
+
+<p>{interview.description}</p>
+
+<button
+className="start-btn"
+onClick={() => navigate(`/interview-room/${interview.type}`)}
+>
+Start Interview
+</button>
+
+</div>
+
+))}
+
+</div>
+
+</div>
+
+</div>
+
+);
+
+}
+
+export default Interviews;

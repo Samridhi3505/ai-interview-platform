@@ -37,7 +37,7 @@ function App() {
 
         <Route path="/interview" element={<InterviewRoom />} />
 
-        <Route path="/report" element={<Report />} />
+  
 
       </Routes>
 

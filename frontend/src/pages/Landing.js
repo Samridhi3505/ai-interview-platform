@@ -9,7 +9,6 @@ import microsoft from "../assets/logos/microsoft.png";
 import amazon from "../assets/logos/amazon.png";
 import apple from "../assets/logos/apple.png";
 import meta from "../assets/logos/meta.png";
-import netflix from "../assets/logos/netflix.png";
 
 export default function Landing() {
 
@@ -21,6 +20,18 @@ export default function Landing() {
       setShowGreeting(true);
     }, 2000);
   }, []);
+
+  /* FLOATING LOGO DATA */
+
+  const logos = [google, microsoft, amazon, apple, meta];
+
+  const floatingLogos = Array.from({ length: 18 }).map((_, i) => ({
+    id: i,
+    src: logos[i % logos.length],
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    duration: 18 + Math.random() * 10
+  }));
 
   return (
     <div style={styles.page}>
@@ -56,14 +67,18 @@ export default function Landing() {
 
       {/* FLOATING COMPANY LOGOS */}
 
-      <img src={google} style={{...styles.logo,left:"8%",animationDuration:"26s"}} />
-      <img src={microsoft} style={{...styles.logo,left:"22%",animationDuration:"20s"}} />
-      <img src={amazon} style={{...styles.logo,left:"35%",animationDuration:"24s"}} />
-      <img src={apple} style={{...styles.logo,left:"55%",animationDuration:"22s"}} />
-      <img src={meta} style={{...styles.logo,left:"70%",animationDuration:"28s"}} />
-      <img src={netflix} style={{...styles.logo,left:"85%",animationDuration:"18s"}} />
-
-
+      {floatingLogos.map((logo) => (
+        <img
+          key={logo.id}
+          src={logo.src}
+          style={{
+            ...styles.logo,
+            left: `${logo.left}%`,
+            top: `${logo.top}%`,
+            animationDuration: `${logo.duration}s`
+          }}
+        />
+      ))}
 
       {/* MAIN CARD */}
 
@@ -145,16 +160,9 @@ width:"100%"
 
 logo:{
 position:"absolute",
-top:"100%",
 width:"70px",
 opacity:0.12,
 animation:"floatLogo linear infinite"
-},
-
-brain:{
-position:"absolute",
-top:"15%",
-left:"10%"
 },
 
 card:{

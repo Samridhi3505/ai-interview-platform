@@ -1,39 +1,80 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "../styles/global.css";
 
 function Signup(){
 
-const navigate = useNavigate()
+const navigate = useNavigate();
+
+const [name,setName] = useState("");
+const [email,setEmail] = useState("");
+const [password,setPassword] = useState("");
+
+const handleSignup = () => {
+
+if(name && email && password){
+
+alert("Account Created");
+
+navigate("/login");
+
+}else{
+
+alert("Fill all fields");
+
+}
+
+};
 
 return(
 
 <div className="container">
 
-<h2>Create Account</h2>
-
 <div className="card">
 
-<input placeholder="Name"/>
+<h2>Signup</h2>
 
-<br/><br/>
+<input
+type="text"
+placeholder="Full Name"
+value={name}
+onChange={(e)=>setName(e.target.value)}
+/>
 
-<input placeholder="Email"/>
+<input
+type="email"
+placeholder="Email"
+value={email}
+onChange={(e)=>setEmail(e.target.value)}
+/>
 
-<br/><br/>
+<input
+type="password"
+placeholder="Password"
+value={password}
+onChange={(e)=>setPassword(e.target.value)}
+/>
 
-<input type="password" placeholder="Password"/>
-
-<br/><br/>
-
-<button onClick={()=>navigate("/dashboard")}>
-Signup
+<button className="main-btn" onClick={handleSignup}>
+Create Account
 </button>
 
-</div>
+<p>
+
+Already have an account?
+
+<span onClick={()=>navigate("/login")}>
+ Login
+</span>
+
+</p>
 
 </div>
 
-)
+</div>
+
+);
 
 }
 
-export default Signup
+export default Signup;

@@ -1,60 +1,86 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "../styles/global.css";
 
-function Login(){
+function Login() {
 
-const navigate = useNavigate()
+const navigate = useNavigate();
 
-const [email,setEmail]=useState("")
-const [password,setPassword]=useState("")
+const [email,setEmail] = useState("");
+const [password,setPassword] = useState("");
+const [showPassword,setShowPassword] = useState(false);
 
-const handleLogin=()=>{
+const handleLogin = () => {
 
 if(email && password){
 
-navigate("/dashboard")
+alert("Login Successful");
+
+navigate("/dashboard");
 
 }else{
 
-alert("Enter credentials")
+alert("Enter credentials");
 
 }
 
-}
+};
 
-return(
+return (
 
 <div className="container">
 
-<h2>Login</h2>
-
 <div className="card">
 
+<h2>Login</h2>
+
 <input
-placeholder="Email"
+type="email"
+placeholder="Enter Email"
+value={email}
 onChange={(e)=>setEmail(e.target.value)}
 />
 
-<br/><br/>
+<div className="password-box">
 
 <input
-type="password"
-placeholder="Password"
+type={showPassword ? "text":"password"}
+placeholder="Enter Password"
+value={password}
 onChange={(e)=>setPassword(e.target.value)}
 />
 
-<br/><br/>
+<button
+className="show-btn"
+onClick={()=>setShowPassword(!showPassword)}
+>
 
-<button onClick={handleLogin}>
-Login
+{showPassword ? "Hide":"Show"}
+
 </button>
 
 </div>
 
+<button className="main-btn" onClick={handleLogin}>
+Login
+</button>
+
+<p>
+
+Don't have an account?
+
+<span onClick={()=>navigate("/signup")}>
+ Sign Up
+</span>
+
+</p>
+
 </div>
 
-)
+</div>
+
+);
 
 }
 
-export default Login
+export default Login;
