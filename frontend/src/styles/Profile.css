@@ -1,0 +1,180 @@
+/* MAIN CONTAINER */
+.profile-container {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 10px;
+  
+}
+
+/* CARD */
+.profile-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(15px);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: 0.3s;
+}
+
+.profile-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 20px rgba(59,130,246,0.3);
+}
+
+/* HEADER */
+.profile-header {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+/* IMAGE */
+.profile-img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* INFO */
+.profile-info h2 {
+  margin: 0;
+}
+
+.profile-info p {
+  margin: 5px 0;
+  opacity: 0.7;
+}
+
+.role {
+  font-size: 14px;
+  color: #38bdf8;
+}
+
+/* INPUTS */
+.profile-info input {
+  display: block;
+  margin: 5px 0;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  width: 200px;
+}
+
+/* BUTTON */
+.profile-card button {
+  margin-top: 10px;
+  padding: 8px 15px;
+  border-radius: 8px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+}
+
+/* SKILLS */
+.skills {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.skills span {
+  background: #1e293b;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+/* SETTINGS */
+.settings {
+  display: flex;
+  gap: 10px;
+}
+/* INPUT IMPROVEMENT */
+.profile-left input {
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #1e293b;
+  color: white;
+}
+
+/* BUTTON HOVER */
+.primary-btn {
+  transition: 0.3s;
+}
+
+.primary-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #3b82f6;
+}
+
+/* LOGOUT BUTTON */
+.danger-btn {
+  background: #ef4444;
+  color: white;
+  border-radius: 8px;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.danger-btn:hover {
+  background: #dc2626;
+}
+
+/* PROFILE IMAGE HOVER */
+.profile-img:hover {
+  transform: scale(1.05);
+  transition: 0.3s;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .profile-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+/* SKILL CHIP */
+.skill-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1e293b;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.skill-chip span {
+  cursor: pointer;
+  color: #ef4444;
+  font-weight: bold;
+}
+
+/* ADD SKILL */
+.add-skill {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.add-skill input {
+  width:150px;
+  flex: none;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+}
+
+.add-skill button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+}

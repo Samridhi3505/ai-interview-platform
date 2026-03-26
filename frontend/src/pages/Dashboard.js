@@ -1,85 +1,121 @@
-import React from "react";
-import Sidebar from "../components/Sidebar";
+import React, { useEffect } from "react";
+import "../styles/global_old.css";
+import { useNavigate } from "react-router-dom";
 
-import {
-LineChart,
-Line,
-XAxis,
-YAxis,
-CartesianGrid,
-Tooltip,
-ResponsiveContainer
-} from "recharts";
+export default function Dashboard() {
 
-import "../styles/global.css";
+  const navigate = useNavigate(); // ✅ FIX
 
-function Dashboard(){
+  // 🧠 Magnetic Hover Effect
+  useEffect(() => {
+    const cards = document.querySelectorAll(".card");
 
-const stats=[
-{title:"Interviews Taken",value:8},
-{title:"Average Score",value:"72%"},
-{title:"Best Score",value:"88%"},
-{title:"Practice Time",value:"4h 30m"}
-]
+    const handleMouseMove = (card) => (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
 
-const chartData=[
-{name:"Interview1",score:60},
-{name:"Interview2",score:70},
-{name:"Interview3",score:75},
-{name:"Interview4",score:82}
-]
+      card.style.transform = `rotateX(${ -y / 20 }deg) rotateY(${ x / 20 }deg) scale(1.05)`;
+    };
 
-return(
+    const handleLeave = (card) => () => {
+      card.style.transform = "rotateX(0) rotateY(0) scale(1)";
+    };
 
-<div className="layout">
+    cards.forEach((card) => {
+      const move = handleMouseMove(card);
+      const leave = handleLeave(card);
 
-<Sidebar/>
+      card.addEventListener("mousemove", move);
+      card.addEventListener("mouseleave", leave);
 
-<div className="main">
+      card._move = move;
+      card._leave = leave;
+    });
 
-<h1>Dashboard</h1>
+    return () => {
+      cards.forEach((card) => {
+        card.removeEventListener("mousemove", card._move);
+        card.removeEventListener("mouseleave", card._leave);
+      });
+    };
+  }, []);
+  
 
-<div className="stats">
+  return (
+    <div className="dashboard-container">
 
-{stats.map((s,i)=>(
-<div key={i} className="card">
-<h3>{s.title}</h3>
-<p>{s.value}</p>
-</div>
-))}
+      {/* 🔥 TOP SECTION */}
+      <div className="top-section">
+        <div className="top-box">
+          <h2 className="dashboard-title">Dashboard</h2>
+          <p>Hey Samridhi 👋, ready to crack your next interview?</p>
+        </div>
+      </div>
 
-</div>
+      {/* 💎 STATS */}
+      <div className="stats">
+        <div className="card">
+          <h2>82%</h2>
+          <p>Avg Score</p>
+        </div>
 
-<div className="chart">
+        <div className="card">
+          <h2>10</h2>
+          <p>Questions Practiced</p>
+        </div>
 
-<h3>Interview Progress</h3>
+        <div className="card">
+          <h2>5 🔥</h2>
+          <p>Day Streak</p>
+        </div>
+      </div>
 
-<ResponsiveContainer width="100%" height={300}>
+      {/* 🚀 BOTTOM GRID */}
+      <div className="bottom-grid">
 
-<LineChart data={chartData}>
+        <div className="card">
+          <h3>📈 Progress</h3>
+          <p className="progress-text">
+            You are performing better than last week 🔥
+          </p>
+        </div>
 
-<CartesianGrid strokeDasharray="3 3"/>
+        <div className="card">
+          <h3>🧑‍💻 Recent Activity</h3>
+          <ul>
+            <li>✅ Completed HR Interview</li>
+            <li>📊 Scored 82% in DSA round</li>
+            <li>🎯 Practiced 10 questions</li>
+          </ul>
+        </div>
 
-<XAxis dataKey="name"/>
+        <div className="card">
+          <h3>🚀 Quick Actions</h3>
+          <div className="actions">
+            <button onClick={() => navigate("/Interview")}>
+              🎤 Interview
+            </button>
 
-<YAxis/>
+            <button onClick={() => navigate("/Report")}>
+              📊 Reports
+            </button>
 
-<Tooltip/>
+            <button onClick={() => navigate("/Results")}>
+              📝 Results
+            </button>
 
-<Line type="monotone" dataKey="score" stroke="#6366f1"/>
+            <button onClick={() => navigate("/Profile")}>
+              👤 Profile
+            </button>
+            <button onClick={() => navigate("/Roadmap")}>
+              Roadmap
+            </button>
+          </div>
+        </div>
 
-</LineChart>
+      </div>
 
-</ResponsiveContainer>
-
-</div>
-
-</div>
-
-</div>
-
-)
-
+    </div>
+  );
 }
-
-export default Dashboard

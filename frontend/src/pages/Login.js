@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/global.css";
+import "../styles/global_old.css";
 
 function Login() {
 
@@ -61,13 +61,13 @@ onClick={()=>setShowPassword(!showPassword)}
 
 </div>
 
-<button className="main-btn" onClick={handleLogin}>
+<button className="auth-btn" onClick={handleLogin}>
 Login
 </button>
 
 <p>
 
-Don't have an account?
+Don't have an account?{" "}
 
 <span onClick={()=>navigate("/signup")}>
  Sign Up

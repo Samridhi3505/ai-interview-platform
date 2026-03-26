@@ -1,6 +1,6 @@
 import React from "react";
-import Sidebar from "../components/Sidebar";
-import "../styles/dashboard.css";
+
+import "../styles/global_old.css";
 
 function Results(){
 
@@ -8,7 +8,7 @@ return(
 
 <div className="layout">
 
-<Sidebar/>
+
 
 <div className="main">
 
