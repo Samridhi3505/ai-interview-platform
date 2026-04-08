@@ -12,4 +12,4 @@ AI-powered platform to practice technical interviews.
 - React
 - Node.js
 - Express
-- OpenAI API
+
