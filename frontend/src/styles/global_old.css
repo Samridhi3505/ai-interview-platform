@@ -1295,3 +1295,139 @@ button, input, span, a {
   display: flex;
   gap: 10px;
 }
+.container {
+  height: 100vh;
+}
+
+.main {
+  display: flex;
+}
+
+/* LEFT */
+.sidebar {
+  width: 250px;
+  background: #1e1e2f;
+  color: white;
+  overflow-y: auto;
+}
+
+.q-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.q-item.active {
+  background: #3498db;
+}
+
+.diff.easy { color: #2ecc71; }
+.diff.medium { color: #f39c12; }
+.diff.hard { color: #e74c3c; }
+
+/* RIGHT */
+.problem-area {
+  flex: 1;
+  padding: 20px;
+}
+
+.actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+.actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  align-items: center;
+}
+.interview-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0f172a;
+  color: white;
+}
+
+/* HEADER */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 20px;
+  background: #020617;
+}
+
+.top-actions button {
+  margin-left: 10px;
+}
+
+/* MAIN */
+.main-layout {
+  display: flex;
+  flex: 1;
+}
+
+/* LEFT */
+.left-panel {
+  width: 280px;
+  background: #020617;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+/* RIGHT */
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* PROBLEM */
+.problem-box {
+  padding: 15px;
+  border-bottom: 1px solid #1e293b;
+}
+
+/* EDITOR */
+.editor-box {
+  flex: 1;
+}
+
+/* BUTTONS */
+.action-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 10px;
+}
+
+/* DIFFICULTY COLORS */
+.difficulty.easy { color: #22c55e; }
+.difficulty.medium { color: #facc15; }
+.difficulty.hard { color: #ef4444; }
+
+.output-box {
+  background: #020617;
+  color: #22c55e;
+  padding: 10px;
+  font-size: 14px;
+  height: 120px;
+  overflow-y: auto;
+  border-top: 1px solid #1e293b;
+}
+.msg {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.msg.success {
+  background: #00c853;
+  color: white;
+}
+
+.msg.error {
+  background: #ff5252;
+  color: white;
+}

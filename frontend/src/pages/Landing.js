@@ -88,10 +88,10 @@ export default function Landing() {
         animate={{ opacity:1,y:0 }}
       >
 
-        <h1 style={styles.title}>PrepZen AI</h1>
+        <h1 style={styles.title}>PrepZen</h1>
 
         <p style={styles.description}>
-          Master interviews through calm practice and intelligent preparation.
+          Master Interviews Through Calm Practice & Intelligent Preparation.
         </p>
 
         {/* TYPEWRITER */}
@@ -100,10 +100,10 @@ export default function Landing() {
           <Typewriter
             options={{
               strings:[
-                "Practice interviews with AI",
-                "Prepare for FAANG companies",
-                "Build confidence before the real interview",
-                "Turn preparation into success"
+                "Practice Interviews with AI",
+                "Prepare for FAANG Companies",
+                "Build Confidence Before the Real Interview",
+                "Turn Preparation into Success"
               ],
               autoStart:true,
               loop:true
@@ -131,7 +131,7 @@ export default function Landing() {
           initial={{ opacity:0,y:40 }}
           animate={{ opacity:1,y:0 }}
         >
-          🤖 Hello! Ready to prepare for your interview?
+          🤖 Hello! Ready to prepare for your Interview?
         </motion.div>
 
       )}

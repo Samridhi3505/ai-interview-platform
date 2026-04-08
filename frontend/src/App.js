@@ -9,9 +9,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Interview from "./pages/Interview";
-import Reports from "./pages/Report";
-import Results from "./pages/Result";
-import Roadmap from "./pages/Roadmap";
+import NonTech from "./pages/NonTech";
+import Resources from "./pages/Resources";
 import Profile from "./pages/Profile";
 
 import "./styles/global_old.css";
@@ -33,9 +32,8 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/interview" element={<Interview />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/results" element={<Results />} />
-          <Route path="/roadmap" element={<Roadmap />} />
+          <Route path="/NonTech" element={<NonTech />} />
+          <Route path="/resources" element={<Resources />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
   );

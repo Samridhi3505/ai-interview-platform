@@ -1,108 +1,289 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import "../styles/interview.css";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+// ✅ DSA DATA
+import arraysQuestions from "../Data/ArrayData";
+import binarySearchQuestions from "../Data/BinarySearchData";
+import treeQuestions from "../Data/TreesData";
+import graphQuestions from "../Data/GraphsData";
+import linkedListQuestions from "../Data/LinkedList";
+import dpQuestions from "../Data/DPData";
+import stringQuestions from "../Data/StringsData";
+import hashingQuestions from "../Data/HashingData";
+import stackQueueQuestions from "../Data/S&Qdata";
 
-function Interview() {
-  const [answer, setAnswer] = useState("");
-  const [feedback, setFeedback] = useState("");
-  const [loading, setLoading] = useState(false);
+// ✅ CORE DATA
+import cnResources from "../Data/CNData";
+import dbmsResources from "../Data/DBMSData";
+import oopsResources from "../Data/OopsData";
+import osResources from "../Data/OsData";
 
-  const submitAnswer = async () => {
-  if (!answer.trim()) {
-    alert("Please enter your answer");
-    return;
-  }
+export default function Interview() {
+  const [mode, setMode] = useState("dsa");
+  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [selectedCore, setSelectedCore] = useState(null);
+  const [solved, setSolved] = useState({});
+  const navigate = useNavigate();
 
-  setLoading(true);
-  console.log("STEP 1: Button clicked");
+  // ✅ DSA TOPICS
+  const dsaTopics = [
+    "Arrays", "Binary Search", "Trees", "Graphs",
+    "Linked List", "Dynamic Programming", "Strings", "Hashing", "Stacks & Queues"
+  ];
 
-  try {
-    console.log("STEP 2: Sending request...");
+  // ✅ CORE SUBJECTS
+  const coreSubjects = [
+    { title: "DBMS", desc: "Most Asked Database Concepts" },
+    { title: "Operating System", desc: "Processes, Threads & Memory" },
+    { title: "Computer Networks", desc: "Networking Fundamentals" },
+    { title: "OOPS", desc: "Object Oriented Principles" }
+  ];
 
-    const res = await axios.post("http://localhost:8000/api/interview", {
-      answer: answer,
-    });
+  // ✅ DSA MAP
+  const topicDataMap = {
+    "Arrays": arraysQuestions || [],
+    "Binary Search": binarySearchQuestions || [],
+    "Trees": treeQuestions || [],
+    "Graphs": graphQuestions || [],
+    "Linked List": linkedListQuestions || [],
+    "DP": dpQuestions || [],
+    "Strings": stringQuestions || [],
+    "Hashing": hashingQuestions || [],
+    "Stacks & Queues": stackQueueQuestions || []
+  };
 
-    console.log("STEP 3: Response received", res);
+  // ✅ CORE MAP
+  const coreDataMap = {
+    "Computer Networks": cnResources,
+    "DBMS": dbmsResources,
+    "OOPS": oopsResources,
+    "Operating System": osResources
+  };
+const rawData = topicDataMap[selectedTopic];
 
-    setFeedback(res.data.feedback);
-    setAnswer("");
-  } catch (err) {
-    console.error("ERROR:", err);
-    alert("Backend error");
-  }
+const questions = Array.isArray(rawData)
+  ? rawData
+  : rawData?.questions || [];
 
-  console.log("STEP 4: Done");
-  setLoading(false);
+  const markSolved = async (questionId) => {
+  await axios.post("http://localhost:8000/solve", {
+    username: "samridhi", // static for now
+    questionId,
+  });
 };
+ 
+
+  // ✅ LOAD PROGRESS
+  useEffect(() => {
+    if (selectedTopic) {
+      const saved = localStorage.getItem(selectedTopic);
+      setSolved(saved ? JSON.parse(saved) : {});
+    }
+  }, [selectedTopic]);
+
+  // ✅ SAVE PROGRESS
+  useEffect(() => {
+    if (selectedTopic) {
+      localStorage.setItem(selectedTopic, JSON.stringify(solved));
+    }
+  }, [solved, selectedTopic]);
+
+  const toggleSolved = (id) => {
+    setSolved((prev) => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  const getProgress = (topic) => {
+    const saved = JSON.parse(localStorage.getItem(topic) || "{}");
+    const total = topicDataMap[topic]?.length || 0;
+    const done = Object.values(saved).filter(Boolean).length;
+    return total ? Math.round((done / total) * 100) : 0;
+  };
+
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(to right, #0f172a, #1e3a8a)",
-        color: "white",
-        padding: "40px",
-      }}
-    >
-      <h1 style={{ fontSize: "36px", marginBottom: "20px" }}>
-        AI Interview
-      </h1>
+    <div className="interview-page">
 
-      <p style={{ fontSize: "18px", marginBottom: "15px" }}>
-        <b>Question:</b> Tell me about yourself
-      </p>
+      {/* NAV */}
+      <div className="tabs">
+        {["DSA Playlist", "Core CS Subjects"].map((tab) => (
+          <button
+            key={tab}
+            className={`tab ${
+              mode === (tab === "DSA Playlist" ? "dsa" : "core") ? "active" : ""
+            }`}
+            onClick={() => {
+              setMode(tab === "DSA Playlist" ? "dsa" : "core");
+              setSelectedTopic(null);
+              setSelectedCore(null);
+            }}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+      <button className="dashboard-btn" onClick={() => navigate("/Dashboard")}>
+  🏠 Dashboard
+</button>
 
-      <textarea
-        value={answer}
-        onChange={(e) => setAnswer(e.target.value)}
-        rows="5"
-        placeholder="Type your answer here..."
-        style={{
-          width: "100%",
-          maxWidth: "500px",
-          padding: "10px",
-          borderRadius: "8px",
-          border: "none",
-          outline: "none",
-          fontSize: "14px",
-        }}
-      />
+      {/* HEADER */}
+      <div className="header">
+        <h1>{mode === "dsa" ? "DSA Playlist" : "Core CS Subjects"}</h1>
+        <p>Master Concepts Step-by-Step</p>
+      </div>
 
-      <br />
+      {/* ================= CORE ================= */}
+      {mode === "core" && !selectedCore && (
+        <div className="grid">
+          {coreSubjects.map((item) => (
+            <div className="card" key={item.title}>
+              <h2>{item.title}</h2>
+              <p>{item.desc}</p>
+              <button
+                className="btn"
+                onClick={() => setSelectedCore(item.title)}
+              >
+                Start Learning →
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
-      <button
-        onClick={submitAnswer}
-        style={{
-          marginTop: "15px",
-          padding: "10px 20px",
-          backgroundColor: "#2563eb",
-          border: "none",
-          borderRadius: "8px",
-          color: "white",
-          cursor: "pointer",
-          fontSize: "16px",
-        }}
-      >
-        {loading ? "Analyzing..." : "Submit"}
-      </button>
+      {/* 🔥 CORE DETAILS */}
+      {selectedCore && (
+  <div className="core-container">
 
-      {/* Feedback Box */}
-      {feedback && (
-        <div
-          style={{
-            marginTop: "30px",
-            padding: "20px",
-            backgroundColor: "#1e293b",
-            borderRadius: "10px",
-            maxWidth: "700px",
-          }}
-        >
-          <h3 style={{ marginBottom: "10px" }}>AI Feedback</h3>
-          <p style={{ lineHeight: "1.6" }}>{feedback}</p>
+    <button className="back-btn" onClick={() => setSelectedCore(null)}>
+      ← Back
+    </button>
+    <button className="dashboard-btn" onClick={() => navigate("/Dashboard")}>
+  🏠 Dashboard
+</button>
+
+    <h2 className="core-title">{selectedCore}</h2>
+
+    {/* 🌐 WEBSITES */}
+    <div className="core-section">
+      <h3>🌐 Websites</h3>
+      <div className="resource-grid">
+        {coreDataMap[selectedCore]?.websites.map((site, i) => (
+          <div key={i} className="resource-card">
+            <h4>{site.name}</h4>
+            <p>{site.description}</p>
+            <a href={site.link} target="_blank" className="resource-btn">
+              Open →
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* 🎥 YOUTUBE */}
+    <div className="core-section">
+      <h3>🎥 YouTube</h3>
+      <div className="resource-grid">
+        {coreDataMap[selectedCore]?.youtube.map((yt, i) => (
+          <div key={i} className="resource-card">
+            <h4>{yt.name}</h4>
+            <p>{yt.description}</p>
+            <a href={yt.link} target="_blank" className="resource-btn yt">
+              Watch →
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* 📚 TOPICS */}
+    <div className="core-section">
+      <h3>📚 Important Topics</h3>
+
+      {coreDataMap[selectedCore]?.importantTopics.map((section, i) => (
+        <div key={i} className="topic-card">
+          <h4>{section.category}</h4>
+
+          <div className="topic-list">
+            {section.topics.map((t, idx) => (
+              <span key={idx} className="topic-pill">
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+
+  </div>
+)}
+
+      {/* ================= DSA ================= */}
+      {mode === "dsa" && !selectedTopic && (
+        <div className="grid">
+          {dsaTopics.map((topic) => (
+            <div key={topic} className="card">
+              <h2>{topic}</h2>
+              <div className="progress">
+           <div
+             className="progress-fill"
+              style={{ width: `${getProgress(topic)}%` }}
+               ></div>
+               </div>
+
+           <p className="progress-text">
+            {getProgress(topic)}% Completed
+               </p>
+
+              
+
+              <button
+                className="btn"
+                onClick={() => setSelectedTopic(topic)}
+              >
+                Start Learning →
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* QUESTIONS */}
+      {selectedTopic && (
+        <div className="questions-container">
+
+          <button className="back-btn" onClick={() => setSelectedTopic(null)}>
+            ← Back
+          </button>
+
+          <h2>{selectedTopic}</h2>
+
+          {questions.map((q) => (
+            <div key={q.id} className="question-row">
+
+              <input
+                type="checkbox"
+                checked={!!solved[q.id]}
+                onChange={() => toggleSolved(q.id)}
+              />
+
+              <span className="title">{q.title}</span>
+
+              <span className={`difficulty ${q.difficulty}`}>
+                {q.difficulty}
+              </span>
+
+              <a href={q.link} target="_blank" className="solve-btn">
+                Solve →
+              </a>
+
+            </div>
+          ))}
+
         </div>
       )}
     </div>
   );
 }
-
-export default Interview;

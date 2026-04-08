@@ -1,146 +1,318 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/Profile.css";
+import axios from "axios";
+import Avatar from "../components/Avatar";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [user, setUser] = useState({
-    name: "Samridhi Thakur",
-    email: "samridhi@email.com",
-    role: "B.Tech Student",
-    image: "https://i.pravatar.cc/100"
+    name: "",
+    email: "",
+    role: "",
   });
+  
 
-  // ✅ FIX: add missing states
   const [skills, setSkills] = useState([]);
   const [newSkill, setNewSkill] = useState("");
 
-  // Load saved data
-  useEffect(() => {
-    const savedUser = JSON.parse(localStorage.getItem("user"));
-    const savedSkills = JSON.parse(localStorage.getItem("skills"));
+  const [showPasswordBox, setShowPasswordBox] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [strength, setStrength] = useState("");
+  const [errors, setErrors] = useState({});
+  
 
-    if (savedUser) setUser(savedUser);
-    if (savedSkills) setSkills(savedSkills);
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+
+  // 🔥 PROFILE COMPLETION
+  const calculateProgress = () => {
+    let total = 4;
+    let filled = 0;
+
+    if (user.name) filled++;
+    if (user.email) filled++;
+    if (user.role) filled++;
+    if (skills.length > 0) filled++;
+
+    return Math.round((filled / total) * 100);
+  };
+
+  const progress = calculateProgress();
+
+  // 🔥 FETCH PROFILE
+  useEffect(() => {
+    const localUser = JSON.parse(localStorage.getItem("user"));
+
+    if (localUser) {
+      setUser(localUser);
+      setSkills(localUser.skills || []);
+    }
+
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await axios.get(
+          "http://localhost:8000/api/profile",
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+
+        setUser(res.data);
+        setSkills(res.data.skills || []);
+
+        localStorage.setItem("user", JSON.stringify(res.data));
+
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
   }, []);
 
-  // Save data
-  useEffect(() => {
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("skills", JSON.stringify(skills));
-  }, [user, skills]);
+  // 🔥 SAVE PROFILE
+  const handleSaveProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-  // Handle input change
+      const res = await axios.put(
+        "http://localhost:8000/api/profile",
+        { ...user, skills },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      setUser(res.data);
+      localStorage.setItem("user", JSON.stringify(res.data));
+
+      alert("Profile updated ✅");
+
+    } catch {
+      alert("Error updating profile");
+    }
+  };
+
+  // INPUT CHANGE
   const handleChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
-  // Image upload
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUser({ ...user, image: reader.result });
-      };
-      reader.readAsDataURL(file);
+
+  // 🔥 ADD SKILL (NO DUPLICATE)
+  const addSkill = () => {
+    const skill = newSkill.trim();
+    if (skill && !skills.includes(skill)) {
+      setSkills([...skills, skill]);
+      setNewSkill("");
     }
   };
 
-  return (
-    <div className="profile-container">
+  const removeSkill = (index) => {
+    setSkills(skills.filter((_, i) => i !== index));
+  };
 
-      {/* USER INFO */}
-      <div className="profile-card">
-        <img src={user.image} alt="avatar" className="profile-img" />
+  // 🔐 PASSWORD LOGIC
+  const checkStrength = (password) => {
+    if (password.length < 6) return "Weak";
+    if (password.match(/^(?=.*[0-9])(?=.*[!@#$%^&*])/)) return "Strong";
+    return "Medium";
+  };
 
-        {isEditing ? (
-          <>
-            <input name="name" value={user.name} onChange={handleChange} />
-            <input name="email" value={user.email} onChange={handleChange} />
-            <input name="role" value={user.role} onChange={handleChange} />
-          </>
-        ) : (
-          <>
-            <h2>{user.name}</h2>
-            <p>{user.email}</p>
-            <span className="role">{user.role}</span>
-          </>
-        )}
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
 
-        <p style={{ marginTop: "10px" }}>Change Profile Picture</p>
-        <input type="file" onChange={handleImageUpload} />
+    setPasswordData({ ...passwordData, [name]: value });
 
-        <button
-          className="primary-btn"
-          onClick={() => {
-            if (isEditing) alert("Profile Saved ✅");
-            setIsEditing(!isEditing);
-          }}
-        >
-          {isEditing ? "Save" : "Edit Profile"}
-        </button>
+    if (name === "newPassword") {
+      setStrength(checkStrength(value));
+    }
+  };
+
+  const handlePasswordSubmit = async () => {
+    let newErrors = {};
+
+    if (passwordData.newPassword.length < 6) {
+      newErrors.newPassword = "Minimum 6 characters required";
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.post(
+        "http://localhost:8000/api/change-password",
+        {
+          oldPassword: passwordData.oldPassword,
+          newPassword: passwordData.newPassword
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      alert(res.data.message);
+      setShowPasswordBox(false);
+
+    } catch (err) {
+      alert(err.response?.data?.message || "Error");
+    }
+  };
+  const navigate = useNavigate();
+
+  if (loading) return <h2>Loading Profile...</h2>;
+
+ return (
+  <div className="profile-container">
+
+    {/* HEADER */}
+    <div className="profile-header">
+    <Avatar name={user.name} />
+      <div>
+        <h2>{user.name}</h2>
+        <p>{user.email}</p>
+        <span className="role-badge">{user.role || "Add Role"}</span>
+      </div>
+    </div>
+
+    {/* PROGRESS */}
+    <div className="profile-card">
+      <h3>Profile Completion</h3>
+      <div className="progress-bar">
+        <div
+          className="progress-fill"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <p>{progress}% completed</p>
+    </div>
+
+    {/* PROFILE EDIT */}
+    <div className="profile-card">
+      <h3>Edit Profile</h3>
+
+      {isEditing && (
+        <div className="form">
+          <input name="name" value={user.name} onChange={handleChange} />
+          <input name="email" value={user.email} disabled />
+          <input name="role" value={user.role} onChange={handleChange} />
+        </div>
+      )}
+
+      <button
+        className="primary-btn"
+        onClick={() => {
+          if (isEditing) handleSaveProfile();
+          setIsEditing(!isEditing);
+        }}
+      >
+        {isEditing ? "Save Changes" : "Edit Profile"}
+      </button>
+    </div>
+
+    {/* SKILLS */}
+    <div className="profile-card">
+      <h3>Skills</h3>
+
+      <div className="skills">
+        {skills.map((skill, i) => (
+          <div key={i} className="skill-chip">
+            {skill}
+            <span onClick={() => removeSkill(i)}>✕</span>
+          </div>
+        ))}
       </div>
 
-      {/* SKILLS */}
-      <div className="profile-card">
-        <h3>🧠 Skills</h3>
+      <div className="add-skill">
+        <input
+          placeholder="Add skill..."
+          value={newSkill}
+          onChange={(e) => setNewSkill(e.target.value)}
+        />
+        <button className="primary-btn" onClick={addSkill}>
+          Add
+        </button>
+      </div>
+    </div>
 
-        <div className="skills">
-          {skills.map((skill, index) => (
-            <div key={index} className="skill-chip">
-              {skill}
-              <span onClick={() => {
-                const updated = skills.filter((_, i) => i !== index);
-                setSkills(updated);
-              }}>
-                ✕
-              </span>
-            </div>
-          ))}
-        </div>
+    {/* SETTINGS */}
+    <div className="profile-card settings">
+      <button className="secondary-btn" onClick={() => setShowPasswordBox(true)}>
+        Change Password
+      </button>
 
-        {/* ADD SKILL */}
-        <div className="add-skill">
+      <button
+        className="danger-btn"
+        onClick={() => {
+          localStorage.clear();
+          navigate("/",{replace:true});
+        }}
+      >
+        Logout
+      </button>
+      <button className="back-btn" onClick={() => navigate("/dashboard")}>
+  ← Dashboard
+</button>
+    </div>
+    
+
+    {/* PASSWORD MODAL */}
+    {showPasswordBox && (
+      <div className="modal">
+        <div className="modal-content">
+          <h3>Change Password</h3>
+
           <input
-            placeholder="Add skill..."
-            value={newSkill}
-            onChange={(e) => setNewSkill(e.target.value)}
+            type={showPasswords ? "text" : "password"}
+            name="oldPassword"
+            placeholder="Old Password"
+            onChange={handlePasswordChange}
           />
 
-          <button
-            onClick={() => {
-              if (newSkill.trim()) {
-                setSkills([...skills, newSkill]);
-                setNewSkill("");
-              }
-            }}
-          >
-            Add
-          </button>
+          <input
+            type={showPasswords ? "text" : "password"}
+            name="newPassword"
+            placeholder="New Password"
+            onChange={handlePasswordChange}
+          />
+
+          <p className="strength">{strength}</p>
+
+          <input
+            type={showPasswords ? "text" : "password"}
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            onChange={handlePasswordChange}
+          />
+
+          <div className="modal-actions">
+            <button className="primary-btn" onClick={handlePasswordSubmit}>
+              Update
+            </button>
+            <button className="secondary-btn" onClick={() => setShowPasswordBox(false)}>
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
+    )}
 
-      {/* SETTINGS */}
-      <div className="profile-card">
-        <h3>⚙️ Settings</h3>
-
-        <button onClick={() => alert("Coming soon")}>
-          Change Password
-        </button>
-        {"  "}
-
-        <button
-          className="danger-btn"
-          onClick={() => {
-            localStorage.clear();
-            window.location.href = "/login";
-          }}
-        >
-          Logout
-        </button>
-      </div>
-
-    </div>
-  );
+  </div>
+);
 }

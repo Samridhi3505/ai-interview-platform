@@ -1,86 +1,110 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "../styles/global_old.css";
 
 function Login() {
+  const navigate = useNavigate();
 
-const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+const [type, setType] = useState(""); // success / error
 
-const [email,setEmail] = useState("");
-const [password,setPassword] = useState("");
-const [showPassword,setShowPassword] = useState(false);
+  // 🔥 AUTO REDIRECT IF LOGGED IN
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, []);
 
-const handleLogin = () => {
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setMessage("Enter credentials ❌");
+setType("error");
+      return;
+    }
 
-if(email && password){
+    try {
+      setLoading(true);
 
-alert("Login Successful");
+      const res = await axios.post(
+        "http://localhost:8000/api/login",
+        { email, password }
+      );
 
-navigate("/dashboard");
+      // 🔥 SAVE BOTH TOKEN + USER
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-}else{
+     setMessage("Login Successful ✅");
+setType("success");
+      navigate("/dashboard");
 
-alert("Enter credentials");
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Login failed ❌");
+      setType("error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-}
+  return (
+    
+    <div className="container">
+      <div className="card">
 
-};
+        <h2>Login</h2>
+{message && (
+  <div className={`msg ${type}`}>
+    {message}
+  </div>
+)}
+        <input
+          type="email"
+          placeholder="Enter Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-return (
+        <div className="password-box">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-<div className="container">
+          <button
+            className="show-btn"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
 
-<div className="card">
+        <button
+          className="auth-btn"
+          onClick={handleLogin}
+          disabled={loading}
+        >
+          {loading ? "Logging in..." : "Login"}
+        </button>
 
-<h2>Login</h2>
+        <p>
+          Don't have an account?{" "}
+          <span onClick={() => navigate("/signup")}>
+            Sign Up
+          </span>
+        </p>
+        
 
-<input
-type="email"
-placeholder="Enter Email"
-value={email}
-onChange={(e)=>setEmail(e.target.value)}
-/>
-
-<div className="password-box">
-
-<input
-type={showPassword ? "text":"password"}
-placeholder="Enter Password"
-value={password}
-onChange={(e)=>setPassword(e.target.value)}
-/>
-
-<button
-className="show-btn"
-onClick={()=>setShowPassword(!showPassword)}
->
-
-{showPassword ? "Hide":"Show"}
-
-</button>
-
-</div>
-
-<button className="auth-btn" onClick={handleLogin}>
-Login
-</button>
-
-<p>
-
-Don't have an account?{" "}
-
-<span onClick={()=>navigate("/signup")}>
- Sign Up
-</span>
-
-</p>
-
-</div>
-
-</div>
-
-);
-
+      </div>
+    </div>
+  );
 }
 
 export default Login;
