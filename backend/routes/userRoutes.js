@@ -8,99 +8,166 @@ const auth = require("../middleware/auth");
 const cloudinary = require("../config/cloudinary");
 
 const router = express.Router();
-
 const upload = multer({ storage: multer.memoryStorage() });
+
+
+// ================== AUTH ==================
 
 // SIGNUP
 router.post("/signup", async (req, res) => {
-  const hashed = await bcrypt.hash(req.body.password, 10);
+  try {
+    const hashed = await bcrypt.hash(req.body.password, 10);
 
-  const user = new User({
-    ...req.body,
-    password: hashed
-  });
+    const user = new User({
+      ...req.body,
+      password: hashed,
+      progress: {} // ✅ initialize progress
+    });
 
-  await user.save();
-  res.json({ message: "User created" });
+    await user.save();
+    res.json({ message: "User created" });
+
+  } catch (err) {
+    res.status(500).json({ message: "Signup error" });
+  }
 });
+
 
 // LOGIN
 router.post("/login", async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
+  try {
+    const user = await User.findOne({ email: req.body.email });
 
-  const isMatch = await bcrypt.compare(req.body.password, user.password);
+    if (!user) return res.status(400).json({ message: "User not found" });
 
-  if (!isMatch) return res.status(400).json({ message: "Wrong password" });
+    const isMatch = await bcrypt.compare(req.body.password, user.password);
 
-  const token = jwt.sign({ id: user._id }, process.env.SECRET);
+    if (!isMatch) return res.status(400).json({ message: "Wrong password" });
 
-  res.json({ token, user });
+    const token = jwt.sign({ id: user._id }, process.env.SECRET);
+
+    res.json({ token, user });
+
+  } catch (err) {
+    res.status(500).json({ message: "Login error" });
+  }
 });
 
-// PROFILE
+
+// ================== PROFILE ==================
+
+// GET PROFILE
 router.get("/profile", auth, async (req, res) => {
-  const user = await User.findById(req.userId);
-  res.json(user);
+  try {
+    const user = await User.findById(req.userId);
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching profile" });
+  }
 });
 
 // UPDATE PROFILE
 router.put("/profile", auth, async (req, res) => {
-  const user = await User.findByIdAndUpdate(req.userId, req.body, { new: true });
-  res.json(user);
+  try {
+    const { skills } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { skills },
+      { new: true }
+    );
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: "Error updating profile" });
+  }
 });
+
 
 // IMAGE UPLOAD
 router.post("/upload-image", auth, upload.single("image"), async (req, res) => {
-  const stream = cloudinary.uploader.upload_stream(
-    { folder: "profiles" },
-    async (error, result) => {
-      const user = await User.findByIdAndUpdate(
-        req.userId,
-        { image: result.secure_url },
-        { new: true }
-      );
-
-      res.json(user);
-    }
-  );
-
-  stream.end(req.file.buffer);
-});
-// UPDATE PROGRESS
-router.post("/", async (req, res) => {
   try {
-    const userId = req.userId; // ✅ FIXED
-    const { topic, value } = req.body;
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "profiles" },
+      async (error, result) => {
+        if (error) {
+          return res.status(500).json({ message: "Upload failed" });
+        }
 
-    let userProgress = await UserProgress.findOne({ userId });
+        const user = await User.findByIdAndUpdate(
+          req.userId,
+          { image: result.secure_url },
+          { new: true }
+        );
 
-    if (!userProgress) {
-      userProgress = new UserProgress({ userId, progress: {} });
-    }
+        res.json(user);
+      }
+    );
 
-    userProgress.progress[topic] = value;
-
-    await userProgress.save();
-
-    res.json(userProgress);
+    stream.end(req.file.buffer);
 
   } catch (err) {
+    res.status(500).json({ message: "Error uploading image" });
+  }
+});
+
+
+// ================== PROGRESS ==================
+
+// SAVE / UPDATE PROGRESS
+router.post("/progress", auth, async (req, res) => {
+  try {
+    const { topic, question, isChecked } = req.body;
+
+    console.log("BODY:", req.body); // DEBUG
+    console.log("USER:", req.userId);
+
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.progress) user.progress = {};
+
+    if (!user.progress[topic]) user.progress[topic] = [];
+
+    if (isChecked) {
+      // ADD
+      if (!user.progress[topic].includes(question)) {
+        user.progress[topic].push(question);
+      }
+    } else {
+      // REMOVE
+      user.progress[topic] = user.progress[topic].filter(
+        (q) => q !== question
+      );
+    }
+
+    user.markModified("progress"); // ✅ IMPORTANT
+
+    await user.save();
+
+    console.log("UPDATED:", user.progress);
+
+    res.json(user.progress);
+
+  } catch (err) {
+    console.log("ERROR:", err);
     res.status(500).json({ message: "Error saving progress" });
   }
 });
 
+
 // GET PROGRESS
-router.get("/", async (req, res) => {
+router.get("/progress", auth, async (req, res) => {
   try {
-    const userId = req.userId; // ✅ FIXED
-
-    const progress = await UserProgress.findOne({ userId });
-
-    res.json(progress?.progress || {});
-
+    const user = await User.findById(req.userId);
+    res.json(user.progress || {});
   } catch (err) {
     res.status(500).json({ message: "Error fetching progress" });
   }
 });
+
 
 module.exports = router;

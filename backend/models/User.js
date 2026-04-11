@@ -2,21 +2,18 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
   name: String,
-  email: { type: String, unique: true },
+  email: String,
   password: String,
-  role: { type: String },
-  image: String,
-  skills: [String],
+  role: String,
+
+  skills: {
+    type: [String],
+    default: []
+  },
+
   progress: {
-    arrays: { type: Number, default: 0 },
-    binarySearch: { type: Number, default: 0 },
-    trees: { type: Number, default: 0 },
-    graphs: { type: Number, default: 0 },
-    linkedList: { type: Number, default: 0 },
-    dp: { type: Number, default: 0 },
-    strings: { type: Number, default: 0 },
-    hashing: { type: Number, default: 0 },
-    stacksQueues: { type: Number, default: 0 }
+    type: Object,
+    default: {}
   }
 });
 

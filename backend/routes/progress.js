@@ -1,39 +1,60 @@
 const express = require("express");
 const router = express.Router();
 const UserProgress = require("../models/UserProgress");
+const auth = require("../middleware/auth"); // ✅ ADD THIS
 
-// UPDATE PROGRESS
-router.post("/", async (req, res) => {
+
+
+// ================= GET PROGRESS =================
+router.get("/", auth, async (req, res) => {
   try {
-    const { userId, topic, value } = req.body;
-
-    let userProgress = await UserProgress.findOne({ userId });
-
-    if (!userProgress) {
-      userProgress = new UserProgress({ userId, progress: {} });
-    }
-
-    userProgress.progress[topic] = value;
-
-    await userProgress.save();
-
-    res.json(userProgress);
-
-  } catch (err) {
-    res.status(500).json({ message: "Error saving progress" });
-  }
-});
-
-// GET PROGRESS
-router.get("/", async (req, res) => {
-  try {
-    const userId = req.query.userId;
+    const userId = req.userId;
 
     const progress = await UserProgress.findOne({ userId });
 
-    res.json(progress?.progress || {});
+    res.json(progress ? Object.fromEntries(progress.progress) : {});
 
   } catch (err) {
     res.status(500).json({ message: "Error fetching progress" });
   }
 });
+router.get("/profile", async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id); // or req.body.userId
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(Object.fromEntries(userProgress.progress));
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router.put("/profile", async (req, res) => {
+  try {
+    const { name, role, skills } = req.body;
+
+    const user = await User.findOne(); // TEMP (works for now)
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ update fields
+    user.name = name;
+    user.role = role;
+    user.skills = skills;
+
+    await user.save();
+
+    res.json(user);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;

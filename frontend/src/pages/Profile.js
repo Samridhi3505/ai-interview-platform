@@ -22,6 +22,7 @@ export default function Profile() {
   const [showPasswords, setShowPasswords] = useState(false);
   const [strength, setStrength] = useState("");
   const [errors, setErrors] = useState({});
+  const API = "http://localhost:8000";
   
 
   const [passwordData, setPasswordData] = useState({
@@ -109,18 +110,58 @@ export default function Profile() {
   };
 
 
-  // 🔥 ADD SKILL (NO DUPLICATE)
-  const addSkill = () => {
-    const skill = newSkill.trim();
-    if (skill && !skills.includes(skill)) {
-      setSkills([...skills, skill]);
-      setNewSkill("");
-    }
-  };
+  const addSkill = async () => {
+  if (!newSkill.trim()) return;
 
-  const removeSkill = (index) => {
-    setSkills(skills.filter((_, i) => i !== index));
-  };
+  try {
+    const token = localStorage.getItem("token");
+
+    const updatedSkills = [...skills, newSkill];
+
+    const res = await axios.put(
+      "http://localhost:8000/api/profile",
+      { ...user, skills: updatedSkills },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setSkills(res.data.skills);
+    setNewSkill("");
+
+    localStorage.setItem("user", JSON.stringify(res.data));
+  } catch (err) {
+    console.error(err);
+    alert("Skill not saved");
+  }
+};
+
+  const removeSkill = async (index) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const updatedSkills = skills.filter((_, i) => i !== index);
+
+    const res = await axios.put(
+      "http://localhost:8000/api/profile",
+      { ...user, skills: updatedSkills },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setSkills(res.data.skills);
+    localStorage.setItem("user", JSON.stringify(res.data));
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to remove skill");
+  }
+};
 
   // 🔐 PASSWORD LOGIC
   const checkStrength = (password) => {
@@ -174,6 +215,32 @@ export default function Profile() {
       alert(err.response?.data?.message || "Error");
     }
   };
+  const updateProfile = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.put(
+      "http://localhost:8000/api/profile",
+      {
+        ...user,
+        skills, // keep existing skills also
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setUser(res.data);
+    localStorage.setItem("user", JSON.stringify(res.data));
+
+    alert("Profile updated ✅");
+  } catch (err) {
+    console.error(err);
+    alert("Error updating profile");
+  }
+};
   const navigate = useNavigate();
 
   if (loading) return <h2>Loading Profile...</h2>;

@@ -12,7 +12,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 const [type, setType] = useState(""); 
-const API = "https://your-backend.onrender.com";// success / error
+const API = "http://localhost:8000";// success / error
 
   // 🔥 AUTO REDIRECT IF LOGGED IN
   useEffect(() => {
@@ -33,16 +33,18 @@ setType("error");
       setLoading(true);
 
       const res = await axios.post(
-        "https://your-backend.onrender.com/api/login",
+         `${API}/api/login`,
         { email, password }
       );
+      console.log(res.data);
+
 
       // 🔥 SAVE BOTH TOKEN + USER
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
      setMessage("Login Successful ✅");
-setType("success");
+      setType("success");
       navigate("/dashboard");
 
     } catch (err) {
@@ -52,7 +54,7 @@ setType("success");
       setLoading(false);
     }
   };
-  axios.post(`${API}/api/login`, { email, password });
+  
 
   return (
     

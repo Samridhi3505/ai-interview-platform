@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import "../styles/interview.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-// ✅ DSA DATA
+
+// ✅ DATA IMPORTS
 import arraysQuestions from "../Data/ArrayData";
 import binarySearchQuestions from "../Data/BinarySearchData";
 import treeQuestions from "../Data/TreesData";
@@ -13,7 +14,6 @@ import stringQuestions from "../Data/StringsData";
 import hashingQuestions from "../Data/HashingData";
 import stackQueueQuestions from "../Data/S&Qdata";
 
-// ✅ CORE DATA
 import cnResources from "../Data/CNData";
 import dbmsResources from "../Data/DBMSData";
 import oopsResources from "../Data/OopsData";
@@ -23,17 +23,15 @@ export default function Interview() {
   const [mode, setMode] = useState("dsa");
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [selectedCore, setSelectedCore] = useState(null);
-  const [solved, setSolved] = useState({});
-  const navigate = useNavigate();
   const [progress, setProgress] = useState({});
+  const navigate = useNavigate();
 
-  // ✅ DSA TOPICS
+  // ✅ TOPICS
   const dsaTopics = [
     "Arrays", "Binary Search", "Trees", "Graphs",
-    "Linked List", "Dynamic Programming", "Strings", "Hashing", "Stacks & Queues"
+    "Linked List", "DP", "Strings", "Hashing", "Stacks & Queues"
   ];
 
-  // ✅ CORE SUBJECTS
   const coreSubjects = [
     { title: "DBMS", desc: "Most Asked Database Concepts" },
     { title: "Operating System", desc: "Processes, Threads & Memory" },
@@ -41,7 +39,7 @@ export default function Interview() {
     { title: "OOPS", desc: "Object Oriented Principles" }
   ];
 
-  // ✅ DSA MAP
+  // ✅ DATA MAP
   const topicDataMap = {
     "Arrays": arraysQuestions || [],
     "Binary Search": binarySearchQuestions || [],
@@ -54,71 +52,83 @@ export default function Interview() {
     "Stacks & Queues": stackQueueQuestions || []
   };
 
-  // ✅ CORE MAP
   const coreDataMap = {
     "Computer Networks": cnResources,
     "DBMS": dbmsResources,
     "OOPS": oopsResources,
     "Operating System": osResources
   };
-const rawData = topicDataMap[selectedTopic];
 
-const questions = Array.isArray(rawData)
-  ? rawData
-  : rawData?.questions || [];
-
-  const markSolved = async (questionId) => {
-  await axios.post("https://your-backend.onrender.com/api/progress", {
-    username: "samridhi", // static for now
-    questionId,
-  });
-};
- 
-   const toggleSolved = (id) => {
-    setSolved((prev) => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
-  const getProgress = (topic) => {
-    return progress[topic] || 0;
-  };
+  // ✅ FETCH PROGRESS FROM BACKEND
   useEffect(() => {
-  const fetchProgress = async () => {
+    const fetchProgress = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://localhost:8000/api/users/progress", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        setProgress(data || {});
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchProgress();
+  }, []);
+
+  // ✅ SAVE PROGRESS (QUESTION LEVEL)
+  
+ const updateProgress = async (topic, question, isChecked) => {
+  try {
     const token = localStorage.getItem("token");
 
-    const res = await fetch("https://your-backend.onrender.com/api/progress", {
+    await fetch("http://localhost:8000/api/users/progress", {
+      method: "POST",
       headers: {
-        Authorization:`Bearer ${token}` ,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({ topic, question, isChecked }),
     });
 
-    const data = await res.json();
-    setProgress(data);
+    setProgress((prev) => {
+      const prevTopic = prev[topic] || [];
+
+      let newTopic;
+
+      if (isChecked) {
+        newTopic = prevTopic.includes(question)
+          ? prevTopic
+          : [...prevTopic, question];
+      } else {
+        newTopic = prevTopic.filter(q => q !== question);
+      }
+
+      return {
+        ...prev,
+        [topic]: newTopic,
+      };
+    });
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+
+  // ✅ CALCULATE %
+  const getProgress = (topic) => {
+    const completed = progress?.[topic]?.length || 0;
+    const total = topicDataMap[topic]?.length || 1;
+
+    return Math.round((completed / total) * 100);
   };
 
-  fetchProgress();
-}, []);
-
-const updateProgress = async (topic, value) => {
-  const token = localStorage.getItem("token");
-
-  await fetch("https://your-backend.onrender.com/api/progress", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ topic, value }),
-  });
-
-  // 🔥 UPDATE UI INSTANTLY
-  setProgress((prev) => ({
-    ...prev,
-    [topic]: value,
-  }));
-};
   return (
     <div className="interview-page">
 
@@ -140,44 +150,44 @@ const updateProgress = async (topic, value) => {
           </button>
         ))}
       </div>
+
       <button className="dashboard-btn" onClick={() => navigate("/Dashboard")}>
-  🏠 Dashboard
-</button>
+        🏠 Dashboard
+      </button>
 
       {/* HEADER */}
       <div className="header">
         <h1>{mode === "dsa" ? "DSA Playlist" : "Core CS Subjects"}</h1>
         <p>Master Concepts Step-by-Step</p>
       </div>
-
       {/* ================= CORE ================= */}
-      {mode === "core" && !selectedCore && (
-        <div className="grid">
-          {coreSubjects.map((item) => (
-            <div className="card" key={item.title}>
-              <h2>{item.title}</h2>
-              <p>{item.desc}</p>
-              <button
-                className="btn"
-                onClick={() => setSelectedCore(item.title)}
-              >
-                Start Learning →
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+{mode === "core" && !selectedCore && (
+  <div className="grid">
+    {coreSubjects.map((item) => (
+      <div key={item.title} className="card">
+        <h2>{item.title}</h2>
+        <p>{item.desc}</p>
 
-      {/* 🔥 CORE DETAILS */}
-      {selectedCore && (
+        <button
+          className="btn"
+          onClick={() => setSelectedCore(item.title)}
+        >
+          Start Learning →
+        </button>
+      </div>
+    ))}
+  </div>
+)}
+{selectedCore && (
   <div className="core-container">
 
     <button className="back-btn" onClick={() => setSelectedCore(null)}>
       ← Back
     </button>
+
     <button className="dashboard-btn" onClick={() => navigate("/Dashboard")}>
-  🏠 Dashboard
-</button>
+      🏠 Dashboard
+    </button>
 
     <h2 className="core-title">{selectedCore}</h2>
 
@@ -185,7 +195,7 @@ const updateProgress = async (topic, value) => {
     <div className="core-section">
       <h3>🌐 Websites</h3>
       <div className="resource-grid">
-        {coreDataMap[selectedCore]?.websites.map((site, i) => (
+        {coreDataMap[selectedCore]?.websites?.map((site, i) => (
           <div key={i} className="resource-card">
             <h4>{site.name}</h4>
             <p>{site.description}</p>
@@ -201,7 +211,7 @@ const updateProgress = async (topic, value) => {
     <div className="core-section">
       <h3>🎥 YouTube</h3>
       <div className="resource-grid">
-        {coreDataMap[selectedCore]?.youtube.map((yt, i) => (
+        {coreDataMap[selectedCore]?.youtube?.map((yt, i) => (
           <div key={i} className="resource-card">
             <h4>{yt.name}</h4>
             <p>{yt.description}</p>
@@ -217,7 +227,7 @@ const updateProgress = async (topic, value) => {
     <div className="core-section">
       <h3>📚 Important Topics</h3>
 
-      {coreDataMap[selectedCore]?.importantTopics.map((section, i) => (
+      {coreDataMap[selectedCore]?.importantTopics?.map((section, i) => (
         <div key={i} className="topic-card">
           <h4>{section.category}</h4>
 
@@ -235,29 +245,25 @@ const updateProgress = async (topic, value) => {
   </div>
 )}
 
-      {/* ================= DSA ================= */}
+      {/* DSA */}
       {mode === "dsa" && !selectedTopic && (
         <div className="grid">
           {dsaTopics.map((topic) => (
             <div key={topic} className="card">
               <h2>{topic}</h2>
+
               <div className="progress">
-           <div
-             className="progress-fill"
-              style={{ width: `${getProgress(topic)}%` }}
-               ></div>
-               </div>
+                <div
+                  className="progress-fill"
+                  style={{ width: `${getProgress(topic)}%` }}
+                ></div>
+              </div>
 
-           <p className="progress-text">
-            {getProgress(topic)}% Completed
-               </p>
+              <p className="progress-text">
+                {getProgress(topic)}% Completed
+              </p>
 
-              
-
-              <button
-                className="btn"
-                onClick={() => setSelectedTopic(topic)}
-              >
+              <button className="btn" onClick={() => setSelectedTopic(topic)}>
                 Start Learning →
               </button>
             </div>
@@ -275,29 +281,15 @@ const updateProgress = async (topic, value) => {
 
           <h2>{selectedTopic}</h2>
 
-          {questions.map((q) => (
+          {(topicDataMap[selectedTopic] || []).map((q) => (
             <div key={q.id} className="question-row">
 
               <input
                 type="checkbox"
-                checked={!!solved[q.id]}
-                onChange={() => {
-  const updated = !solved[q.id];
-
-  const newSolved = {
-    ...solved,
-    [q.id]: updated
-  };
-
-  setSolved(newSolved);
-
-  const total = questions.length;
-  const done = Object.values(newSolved).filter(Boolean).length;
-
-  const percent = Math.round((done / total) * 100);
-
-  updateProgress(selectedTopic, percent); // 🔥 THIS SAVES TO DATABASE
-}}
+                checked={progress?.[selectedTopic]?.includes(q.title)}
+                onChange={(e) => {
+                  updateProgress(selectedTopic, q.title, e.target.checked);
+                }}
               />
 
               <span className="title">{q.title}</span>
