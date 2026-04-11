@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
@@ -5,23 +6,31 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const path = require("path");
-
 const codeRoutes = require("./routes/codeRoutes");
+const progressRoutes = require("./routes/progress");
+const auth = require("./middleware/auth");
 
 const app = express();
 
 /* ================= MIDDLEWARE ================= */
-app.use(cors());
+app.use(cors({
+  origin: "*"
+}));
 app.use(express.json());
+
 app.use("/api/code", codeRoutes);
 
+// ✅ FIX: do NOT add auth here (already inside progress.js)
+app.use("/api/progress", progressRoutes);
+
 /* ================= CONFIG ================= */
-const SECRET = process.env.JWT_SECRET || "secret123";
+const SECRET = process.env.JWT_SECRET;
+console.log("JWT_SECRET:", process.env.JWT_SECRET);
 
 /* ================= DATABASE ================= */
-mongoose.connect("mongodb://127.0.0.1:27017/ai-platform")
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
-  .catch((err) => console.log("MongoDB Error ❌", err));
+  .catch((err) => console.error("MongoDB Error ❌", err));
 
 /* ================= USER MODEL ================= */
 const userSchema = new mongoose.Schema({
@@ -47,22 +56,6 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
-
-/* ================= AUTH MIDDLEWARE ================= */
-const auth = (req, res, next) => {
-  try {
-    const token = req.headers.authorization?.split(" ")[1];
-
-    if (!token) return res.status(401).json({ message: "No token" });
-
-    const decoded = jwt.verify(token, SECRET);
-    req.userId = decoded.id;
-
-    next();
-  } catch (err) {
-    res.status(401).json({ message: "Invalid token" });
-  }
-};
 
 /* ================= TEST ROUTE ================= */
 app.get("/", (req, res) => {
@@ -98,6 +91,7 @@ app.post("/api/signup", async (req, res) => {
     res.json({ message: "User created ✅" });
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Signup error" });
   }
 });
@@ -112,16 +106,29 @@ app.post("/api/login", async (req, res) => {
     }
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "User not found" });
+
+    // ✅ FIXED (proper return)
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Wrong password" });
 
-    const token = jwt.sign({ id: user._id }, SECRET, { expiresIn: "7d" });
+    // ✅ FIXED (proper return)
+    if (!isMatch) {
+      return res.status(400).json({ message: "Wrong password" });
+    }
+
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
     res.json({ token, user });
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Login error" });
   }
 });
@@ -132,8 +139,15 @@ app.post("/api/login", async (req, res) => {
 app.get("/api/profile", auth, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     res.json(user);
-  } catch {
+
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Error fetching profile" });
   }
 });
@@ -150,7 +164,9 @@ app.put("/api/profile", auth, async (req, res) => {
     );
 
     res.json(updatedUser);
-  } catch {
+
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Error updating profile" });
   }
 });
@@ -160,7 +176,9 @@ app.put("/api/profile", auth, async (req, res) => {
 app.post("/api/change-password", auth, async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
+
     const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     if (!oldPassword || !newPassword) {
       return res.status(400).json({ message: "All fields required" });
@@ -176,7 +194,8 @@ app.post("/api/change-password", auth, async (req, res) => {
 
     res.json({ message: "Password updated ✅" });
 
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Error updating password" });
   }
 });
@@ -188,6 +207,10 @@ app.post("/api/solve", auth, async (req, res) => {
     const { questionId, topic } = req.body;
 
     const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.topics) user.topics = {};
+    if (!user.solvedQuestions) user.solvedQuestions = [];
 
     const alreadySolved = user.solvedQuestions.find(
       (q) => q.questionId === questionId
@@ -205,7 +228,8 @@ app.post("/api/solve", auth, async (req, res) => {
 
     res.json({ message: "Saved ✅" });
 
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Error saving progress" });
   }
 });
@@ -215,6 +239,7 @@ app.post("/api/solve", auth, async (req, res) => {
 app.get("/api/dashboard", auth, async (req, res) => {
   try {
     const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     res.json({
       totalSolved: user.totalSolved,
@@ -224,17 +249,20 @@ app.get("/api/dashboard", auth, async (req, res) => {
       avgScore: user.avgScore
     });
 
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Dashboard error" });
   }
 });
 
 /* ================= SERVE FRONTEND ================= */
 
-app.use(express.static(path.join(__dirname, "build")));
+const buildPath = path.join(__dirname, "build");
+
+app.use(express.static(buildPath));
 
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
+  res.sendFile(path.join(buildPath, "index.html"));
 });
 
 /* ================= START SERVER ================= */

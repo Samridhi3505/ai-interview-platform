@@ -66,5 +66,41 @@ router.post("/upload-image", auth, upload.single("image"), async (req, res) => {
 
   stream.end(req.file.buffer);
 });
+// UPDATE PROGRESS
+router.post("/", async (req, res) => {
+  try {
+    const userId = req.userId; // ✅ FIXED
+    const { topic, value } = req.body;
+
+    let userProgress = await UserProgress.findOne({ userId });
+
+    if (!userProgress) {
+      userProgress = new UserProgress({ userId, progress: {} });
+    }
+
+    userProgress.progress[topic] = value;
+
+    await userProgress.save();
+
+    res.json(userProgress);
+
+  } catch (err) {
+    res.status(500).json({ message: "Error saving progress" });
+  }
+});
+
+// GET PROGRESS
+router.get("/", async (req, res) => {
+  try {
+    const userId = req.userId; // ✅ FIXED
+
+    const progress = await UserProgress.findOne({ userId });
+
+    res.json(progress?.progress || {});
+
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching progress" });
+  }
+});
 
 module.exports = router;

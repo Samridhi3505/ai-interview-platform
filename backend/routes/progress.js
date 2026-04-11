@@ -1,170 +1,39 @@
-import express from "express";
-import UserProgress from "../models/UserProgress.js";
-
+const express = require("express");
 const router = express.Router();
+const UserProgress = require("../models/UserProgress");
 
-/* =========================
-   ✅ SAVE SOLVED PROBLEM
-========================= */
-
-router.post("/solve", async (req, res) => {
+// UPDATE PROGRESS
+router.post("/", async (req, res) => {
   try {
-    const { userId, questionId, difficulty, topic, timeTaken } = req.body;
+    const { userId, topic, value } = req.body;
 
-    // find user
-    let user = await UserProgress.findOne({ userId });
+    let userProgress = await UserProgress.findOne({ userId });
 
-    // if user not exist → create
-    if (!user) {
-      user = new UserProgress({
-        userId,
-        solvedProblems: []
-      });
+    if (!userProgress) {
+      userProgress = new UserProgress({ userId, progress: {} });
     }
 
-    // prevent duplicate submissions (optional but important)
-    const alreadySolved = user.solvedProblems.find(
-      (p) => p.questionId === questionId
-    );
+    userProgress.progress[topic] = value;
 
-    if (alreadySolved) {
-      return res.json({ message: "Already solved" });
-    }
+    await userProgress.save();
 
-    // new solved problem
-    const newProblem = {
-      questionId,
-      difficulty,
-      topic,
-      timeTaken,
-      date: new Date().toISOString().slice(0, 10)
-    };
-
-    // update data
-    user.solvedProblems.push(newProblem);
-    user.totalSolved += 1;
-    user.timeSpent += timeTaken;
-
-    await user.save();
-
-    res.json({ message: "Progress saved ✅" });
+    res.json(userProgress);
 
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "Something went wrong" });
+    res.status(500).json({ message: "Error saving progress" });
   }
 });
-/* =========================
-   📊 GET USER REPORT
-========================= */
 
-router.get("/report/:userId", async (req, res) => {
+// GET PROGRESS
+router.get("/", async (req, res) => {
   try {
-    const user = await UserProgress.findOne({
-      userId: req.params.userId
-    });
+    const userId = req.query.userId;
 
-    if (!user) {
-      return res.json({
-        totalSolved: 0,
-        timeSpent: 0,
-        weeklyData: [],
-        difficulty: { easy: 0, medium: 0, hard: 0 },
-        topics: {},
-        recent: []
-      });
-    }
+    const progress = await UserProgress.findOne({ userId });
 
-    /* =========================
-       📈 WEEKLY DATA
-    ========================= */
-    const weeklyMap = {};
-
-    user.solvedProblems.forEach((p) => {
-      weeklyMap[p.date] = (weeklyMap[p.date] || 0) + 1;
-    });
-
-    const weeklyData = Object.keys(weeklyMap).map((date) => ({
-      date,
-      solved: weeklyMap[date]
-    }));
-
-    /* =========================
-       🎯 DIFFICULTY BREAKDOWN
-    ========================= */
-    const difficulty = { easy: 0, medium: 0, hard: 0 };
-
-    user.solvedProblems.forEach((p) => {
-      if (p.difficulty === "easy") difficulty.easy++;
-      else if (p.difficulty === "medium") difficulty.medium++;
-      else if (p.difficulty === "hard") difficulty.hard++;
-    });
-
-    /* =========================
-       🧠 TOPIC ANALYSIS
-    ========================= */
-    const topics = {};
-
-    user.solvedProblems.forEach((p) => {
-      topics[p.topic] = (topics[p.topic] || 0) + 1;
-    });
-
-    /* =========================
-       🕒 RECENT ACTIVITY
-    ========================= */
-    const recent = user.solvedProblems
-      .slice(-5)
-      .reverse();
-
-    /* =========================
-       🔥 STREAK CALCULATION
-    ========================= */
-    const dates = user.solvedProblems
-      .map(p => p.date)
-      .sort();
-
-    let streak = 0;
-    let prevDate = null;
-
-    for (let i = dates.length - 1; i >= 0; i--) {
-      const current = new Date(dates[i]);
-
-      if (!prevDate) {
-        streak = 1;
-        prevDate = current;
-        continue;
-      }
-
-      const diff =
-        (prevDate - current) / (1000 * 60 * 60 * 24);
-
-      if (diff === 1) {
-        streak++;
-        prevDate = current;
-      } else if (diff === 0) {
-        continue;
-      } else {
-        break;
-      }
-    }
-
-    /* =========================
-       📦 FINAL RESPONSE
-    ========================= */
-
-    res.json({
-      totalSolved: user.totalSolved,
-      timeSpent: user.timeSpent,
-      weeklyData,
-      difficulty,
-      topics,
-      recent,
-      streak
-    });
+    res.json(progress?.progress || {});
 
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ message: "Error fetching progress" });
   }
 });
-export default router;

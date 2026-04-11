@@ -25,6 +25,7 @@ export default function Interview() {
   const [selectedCore, setSelectedCore] = useState(null);
   const [solved, setSolved] = useState({});
   const navigate = useNavigate();
+  const [progress, setProgress] = useState({});
 
   // ✅ DSA TOPICS
   const dsaTopics = [
@@ -67,29 +68,13 @@ const questions = Array.isArray(rawData)
   : rawData?.questions || [];
 
   const markSolved = async (questionId) => {
-  await axios.post("http://localhost:8000/solve", {
+  await axios.post("https://your-backend.onrender.com/api/progress", {
     username: "samridhi", // static for now
     questionId,
   });
 };
  
-
-  // ✅ LOAD PROGRESS
-  useEffect(() => {
-    if (selectedTopic) {
-      const saved = localStorage.getItem(selectedTopic);
-      setSolved(saved ? JSON.parse(saved) : {});
-    }
-  }, [selectedTopic]);
-
-  // ✅ SAVE PROGRESS
-  useEffect(() => {
-    if (selectedTopic) {
-      localStorage.setItem(selectedTopic, JSON.stringify(solved));
-    }
-  }, [solved, selectedTopic]);
-
-  const toggleSolved = (id) => {
+   const toggleSolved = (id) => {
     setSolved((prev) => ({
       ...prev,
       [id]: !prev[id]
@@ -97,13 +82,43 @@ const questions = Array.isArray(rawData)
   };
 
   const getProgress = (topic) => {
-    const saved = JSON.parse(localStorage.getItem(topic) || "{}");
-    const total = topicDataMap[topic]?.length || 0;
-    const done = Object.values(saved).filter(Boolean).length;
-    return total ? Math.round((done / total) * 100) : 0;
+    return progress[topic] || 0;
+  };
+  useEffect(() => {
+  const fetchProgress = async () => {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("https://your-backend.onrender.com/api/progress", {
+      headers: {
+        Authorization:`Bearer ${token}` ,
+      },
+    });
+
+    const data = await res.json();
+    setProgress(data);
   };
 
+  fetchProgress();
+}, []);
 
+const updateProgress = async (topic, value) => {
+  const token = localStorage.getItem("token");
+
+  await fetch("https://your-backend.onrender.com/api/progress", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ topic, value }),
+  });
+
+  // 🔥 UPDATE UI INSTANTLY
+  setProgress((prev) => ({
+    ...prev,
+    [topic]: value,
+  }));
+};
   return (
     <div className="interview-page">
 
@@ -266,7 +281,23 @@ const questions = Array.isArray(rawData)
               <input
                 type="checkbox"
                 checked={!!solved[q.id]}
-                onChange={() => toggleSolved(q.id)}
+                onChange={() => {
+  const updated = !solved[q.id];
+
+  const newSolved = {
+    ...solved,
+    [q.id]: updated
+  };
+
+  setSolved(newSolved);
+
+  const total = questions.length;
+  const done = Object.values(newSolved).filter(Boolean).length;
+
+  const percent = Math.round((done / total) * 100);
+
+  updateProgress(selectedTopic, percent); // 🔥 THIS SAVES TO DATABASE
+}}
               />
 
               <span className="title">{q.title}</span>
