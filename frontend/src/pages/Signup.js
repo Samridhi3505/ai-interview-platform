@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/global_old.css";
+const API = "https://ai-interview-platform-bfm8.onrender.com";
 
 function Signup() {
 
@@ -30,7 +31,7 @@ const [type, setType] = useState(""); // "success" or "error"
       setLoading(true);
 
       const res = await axios.post(
-        "http://localhost:8000/api/signup",
+        "https://ai-interview-platform-bfm8.onrender.com/api/signup",
         {
           name: trimmedName,
           email: trimmedEmail,

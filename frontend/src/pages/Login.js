@@ -12,7 +12,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 const [type, setType] = useState(""); 
-const API = "http://localhost:8000";// success / error
+const API = "https://ai-interview-platform-bfm8.onrender.com";// success / error
 
   // 🔥 AUTO REDIRECT IF LOGGED IN
   useEffect(() => {

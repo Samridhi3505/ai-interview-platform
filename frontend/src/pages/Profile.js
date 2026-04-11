@@ -22,7 +22,7 @@ export default function Profile() {
   const [showPasswords, setShowPasswords] = useState(false);
   const [strength, setStrength] = useState("");
   const [errors, setErrors] = useState({});
-  const API = "http://localhost:8000";
+  const API = "https://ai-interview-platform-bfm8.onrender.com";
   
 
   const [passwordData, setPasswordData] = useState({
@@ -60,7 +60,7 @@ export default function Profile() {
         const token = localStorage.getItem("token");
 
         const res = await axios.get(
-          "http://localhost:8000/api/profile",
+          `${API}/api/profile`,
           {
             headers: { Authorization: `Bearer ${token}` }
           }
@@ -87,7 +87,7 @@ export default function Profile() {
       const token = localStorage.getItem("token");
 
       const res = await axios.put(
-        "http://localhost:8000/api/profile",
+        `${API}/api/profile`,
         { ...user, skills },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -119,7 +119,7 @@ export default function Profile() {
     const updatedSkills = [...skills, newSkill];
 
     const res = await axios.put(
-      "http://localhost:8000/api/profile",
+      ~`${API}/api/profile`,
       { ...user, skills: updatedSkills },
       {
         headers: {
@@ -145,7 +145,7 @@ export default function Profile() {
     const updatedSkills = skills.filter((_, i) => i !== index);
 
     const res = await axios.put(
-      "http://localhost:8000/api/profile",
+     `${API}/api/profile`,
       { ...user, skills: updatedSkills },
       {
         headers: {
@@ -198,7 +198,7 @@ export default function Profile() {
       const token = localStorage.getItem("token");
 
       const res = await axios.post(
-        "http://localhost:8000/api/change-password",
+        `${API}/api/profile`,
         {
           oldPassword: passwordData.oldPassword,
           newPassword: passwordData.newPassword
@@ -220,7 +220,7 @@ export default function Profile() {
     const token = localStorage.getItem("token");
 
     const res = await axios.put(
-      "http://localhost:8000/api/profile",
+      `${API}/api/profile`,
       {
         ...user,
         skills, // keep existing skills also

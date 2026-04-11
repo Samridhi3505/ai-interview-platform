@@ -65,7 +65,7 @@ export default function Interview() {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:8000/api/users/progress", {
+        const res = await fetch("https://ai-interview-platform-bfm8.onrender.com/api/users/progress", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -87,7 +87,7 @@ export default function Interview() {
   try {
     const token = localStorage.getItem("token");
 
-    await fetch("http://localhost:8000/api/users/progress", {
+    await fetch("https://ai-interview-platform-bfm8.onrender.com/api/users/progress", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
