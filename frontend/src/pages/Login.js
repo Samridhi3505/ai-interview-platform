@@ -18,9 +18,9 @@ const API = "https://ai-interview-platform-bfm8.onrender.com";// success / error
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });// 🔥 FORCE FULL RELOAD
     }
-  }, [navigate]);
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -28,6 +28,7 @@ const API = "https://ai-interview-platform-bfm8.onrender.com";// success / error
 setType("error");
       return;
     }
+    console.log("EMAIL ENTERED:", email);
 
     try {
       setLoading(true);
@@ -40,12 +41,12 @@ setType("error");
 
 
       // 🔥 SAVE BOTH TOKEN + USER
+      localStorage.clear(); 
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
 
      setMessage("Login Successful ✅");
-      setType("success");
-      navigate("/dashboard");
+      setType("Success");
+      window.location.href = "/dashboard";
 
     } catch (err) {
       setMessage(err.response?.data?.message || "Login failed ❌");

@@ -48,16 +48,10 @@ export default function Profile() {
 
   // 🔥 FETCH PROFILE
   useEffect(() => {
-    const localUser = JSON.parse(localStorage.getItem("user"));
-
-    if (localUser) {
-      setUser(localUser);
-      setSkills(localUser.skills || []);
-    }
-
-    const fetchProfile = async () => {
+      const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
+        console.log("TOKEN USED:", token); 
 
         const res = await axios.get(
           `${API}/api/profile`,
@@ -65,11 +59,13 @@ export default function Profile() {
             headers: { Authorization: `Bearer ${token}` }
           }
         );
+          console.log("PROFILE DATA:", res.data._id);
+          console.log("Fetched user:", res.data.email);
 
         setUser(res.data);
         setSkills(res.data.skills || []);
 
-        localStorage.setItem("user", JSON.stringify(res.data));
+        
 
       } catch (err) {
         console.log(err);
@@ -93,9 +89,12 @@ export default function Profile() {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
+       const profileRes = await axios.get(`${API}/api/profile`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-      setUser(res.data);
-      localStorage.setItem("user", JSON.stringify(res.data));
+      setUser(profileRes.data);
+       setSkills(profileRes.data.skills || []);
 
       alert("Profile updated ✅");
 
@@ -118,8 +117,8 @@ export default function Profile() {
 
     const updatedSkills = [...skills, newSkill];
 
-    const res = await axios.put(
-      ~`${API}/api/profile`,
+    const profileRes = await axios.put(
+      `${API}/api/profile`,
       { ...user, skills: updatedSkills },
       {
         headers: {
@@ -128,10 +127,10 @@ export default function Profile() {
       }
     );
 
-    setSkills(res.data.skills);
+     setUser(profileRes.data);
+    setSkills(profileRes.data.skills || []);
     setNewSkill("");
 
-    localStorage.setItem("user", JSON.stringify(res.data));
   } catch (err) {
     console.error(err);
     alert("Skill not saved");
@@ -144,7 +143,7 @@ export default function Profile() {
 
     const updatedSkills = skills.filter((_, i) => i !== index);
 
-    const res = await axios.put(
+    const profileRes = await axios.put(
      `${API}/api/profile`,
       { ...user, skills: updatedSkills },
       {
@@ -154,8 +153,8 @@ export default function Profile() {
       }
     );
 
-    setSkills(res.data.skills);
-    localStorage.setItem("user", JSON.stringify(res.data));
+    setUser(profileRes.data);
+    setSkills(profileRes.data.skills || []);
 
   } catch (err) {
     console.error(err);
@@ -233,8 +232,7 @@ export default function Profile() {
     );
 
     setUser(res.data);
-    localStorage.setItem("user", JSON.stringify(res.data));
-
+   
     alert("Profile updated ✅");
   } catch (err) {
     console.error(err);

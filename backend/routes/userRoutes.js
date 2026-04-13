@@ -44,7 +44,7 @@ router.post("/login", async (req, res) => {
 
     if (!isMatch) return res.status(400).json({ message: "Wrong password" });
 
-    const token = jwt.sign({ id: user._id }, process.env.SECRET);
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 
     res.json({ token, user });
 
@@ -52,37 +52,6 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Login error" });
   }
 });
-
-
-// ================== PROFILE ==================
-
-// GET PROFILE
-router.get("/profile", auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.userId);
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: "Error fetching profile" });
-  }
-});
-
-// UPDATE PROFILE
-router.put("/profile", auth, async (req, res) => {
-  try {
-    const { skills } = req.body;
-
-    const user = await User.findByIdAndUpdate(
-      req.userId,
-      { skills },
-      { new: true }
-    );
-
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: "Error updating profile" });
-  }
-});
-
 
 // IMAGE UPLOAD
 router.post("/upload-image", auth, upload.single("image"), async (req, res) => {

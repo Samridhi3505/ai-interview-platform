@@ -4,8 +4,6 @@ const auth = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    console.log("HEADER:", authHeader);
-
     if (!authHeader) {
       return res.status(401).json({ message: "No token provided" });
     }
@@ -14,11 +12,10 @@ const auth = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    console.log("DECODED:", decoded);
-
+    // ✅ THIS IS THE FIX
     req.userId = decoded.id;
 
-    console.log("SET USER ID:", req.userId);
+    console.log("AUTH USER ID:", req.userId); // DEBUG
 
     next();
   } catch (err) {
