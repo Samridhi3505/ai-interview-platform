@@ -85,18 +85,7 @@ app.post("/api/login", async (req, res) => {
 
   res.json({ token, user });
 });
-  const user = users[0];
-
-  const isMatch = await bcrypt.compare(req.body.password, user.password);
-
-  if (!isMatch) return res.status(400).json({ message: "Wrong password" });
-
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-
-  console.log("LOGIN USER ID:", user._id);
-
-  res.json({ token, user });
-});
+  
 
 // UPDATE PROFILE
 app.put("/api/profile", auth, async (req, res) => {
