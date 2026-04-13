@@ -52,9 +52,9 @@ const API = "https://ai-interview-platform-bfm8.onrender.com";// success / error
     setType("success");
 
     // ✅ Better navigation
-    setTimeout(() => {
-      window.location.href = "/dashboard";
-    }, 500);
+    
+      navigate("/dashboard");
+    
 
   } catch (err) {
     console.error("LOGIN ERROR:", err);
@@ -103,6 +103,7 @@ const API = "https://ai-interview-platform-bfm8.onrender.com";// success / error
         </div>
 
         <button
+         type="button"
           className="auth-btn"
           onClick={handleLogin}
           disabled={loading}
