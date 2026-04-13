@@ -33,7 +33,9 @@ app.get("/check", (req, res) => {
 // SIGNUP
 app.post("/api/signup", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const name = req.body.name;
+const email = req.body.email.toLowerCase().trim();
+const password = req.body.password;
 
     const existingUser = await User.findOne({ email });
 
@@ -65,20 +67,24 @@ app.post("/api/signup", async (req, res) => {
 // LOGIN
 // ✅ FIX 2: strict login (prevents duplicate user bug)
 app.post("/api/login", async (req, res) => {
-  const users = await User.find({ email: req.body.email });
+  const email = req.body.email.toLowerCase().trim();
 
-  console.log("Users found:", users.length);
+  const user = await User.findOne({ email });
 
-  if (users.length === 0) {
+  if (!user) {
     return res.status(400).json({ message: "User not found" });
   }
 
-  if (users.length > 1) {
-    return res.status(400).json({
-      message: "Duplicate users found ❌ Clean database"
-    });
+  const isMatch = await bcrypt.compare(req.body.password, user.password);
+
+  if (!isMatch) {
+    return res.status(400).json({ message: "Wrong password" });
   }
 
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+
+  res.json({ token, user });
+});
   const user = users[0];
 
   const isMatch = await bcrypt.compare(req.body.password, user.password);

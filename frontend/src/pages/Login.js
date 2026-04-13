@@ -20,42 +20,53 @@ const API = "https://ai-interview-platform-bfm8.onrender.com";// success / error
     if (token) {
       navigate("/dashboard", { replace: true });// 🔥 FORCE FULL RELOAD
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      setMessage("Enter credentials ❌");
-setType("error");
-      return;
-    }
-    console.log("EMAIL ENTERED:", email);
+  const cleanEmail = email.toLowerCase().trim();
+  const cleanPassword = password.trim();
 
-    try {
-      setLoading(true);
+  if (!cleanEmail || !cleanPassword) {
+    setMessage("Enter credentials ❌");
+    setType("error");
+    return;
+  }
 
-      const res = await axios.post(
-         `${API}/api/login`,
-        { email, password }
-      );
-      console.log(res.data);
+  try {
+    setLoading(true);
 
+    const res = await axios.post(
+      `${API}/api/login`,
+      { email: cleanEmail, password: cleanPassword }
+    );
 
-      // 🔥 SAVE BOTH TOKEN + USER
-      localStorage.clear(); 
-      localStorage.setItem("token", res.data.token);
+    console.log("LOGIN RESPONSE:", res.data);
 
-     setMessage("Login Successful ✅");
-      setType("Success");
+    // ✅ Clear old data safely
+    localStorage.removeItem("token");
+
+    // ✅ Save token
+    localStorage.setItem("token", res.data.token);
+
+    setMessage("Login Successful ✅");
+    setType("success");
+
+    // ✅ Better navigation
+    setTimeout(() => {
       window.location.href = "/dashboard";
+    }, 500);
 
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Login failed ❌");
-      setType("error");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+
+    setMessage(
+      err.response?.data?.message || "Login failed ❌"
+    );
+    setType("error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     
